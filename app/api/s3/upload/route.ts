@@ -1,42 +1,80 @@
 import { NextResponse } from "next/server";
-import { v4 as uuidv4 } from "uuid";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { S3 } from "@/lib/S3Client";
+import arcjet, { detectBot } from "@/lib/arcjet";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import  { fixedWindow } from "arcjet";
+import { requireAdmin } from "@/app/data/admin/require-admin";
 
-export async function POST(req: Request) {
+const aj=arcjet.withRule(
+  detectBot({
+    mode: "LIVE",
+    allow:[]
+  })
+)
+.withRule(
+  fixedWindow({
+    mode: "LIVE",
+    window: "1m",
+    max: 2,
+  })
+)
+
+export async function POST(request: Request) {
+
+  const session = await requireAdmin();
   try {
-    const { fileName, contentType } = await req.json();
-
-    const bucket = process.env.NEXT_PUBLIC_S3_BUCKET_NAME_IMAGES;
-    if (!bucket) {
-      throw new Error("NEXT_PUBLIC_S3_BUCKET_NAME_IMAGES is missing in .env.local");
+    const decision = await aj.protect(request,{
+      fingerprint: session?.user.id as string,
+    });
+     if(decision.isDenied()){
+      return NextResponse.json(
+        {
+          error: "You are not allowed to perform this action"
+        }, 
+        {
+          status: 429
+        })
     }
 
-    const key = `uploads/${Date.now()}-${fileName}`;
+    const { fileName, ContentType, size, isImage } = await request.json();
 
+    // Generate a unique key for the file
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 15);
+    const key = `uploads/${timestamp}-${randomString}-${fileName}`;
+
+    // Create the PutObject command
     const command = new PutObjectCommand({
-      Bucket: bucket,
+      Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME_IMAGES!,
       Key: key,
-      // Remove ContentType for Tigris compatibility - this is the main fix
-      // ContentType: contentType,
+      ContentType,
+      // Add metadata if needed
+      Metadata: {
+        'original-name': fileName,
+        'file-size': size.toString(),
+        'is-image': isImage.toString(),
+      },
     });
 
-    const presignedUrl = await getSignedUrl(S3, command, { 
-      expiresIn: 3600,
-      // Add this for Tigris - prevents Content-Type header conflicts
-      unhoistableHeaders: new Set(['content-type'])
+    // Generate presigned URL (expires in 10 minutes)
+    const presignedUrl = await getSignedUrl(S3, command, {
+       expiresIn: 600,
     });
 
-    // ✅ construct public URL (works for Tigris/S3-compatible storage)
-    const publicUrl = `${process.env.NEXT_PUBLIC_S3_PUBLIC_URL}/${key}`;
+    return NextResponse.json({
+      presignedUrl,
+      key,
+      bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME_IMAGES,
+    });
 
-    return NextResponse.json({ presignedUrl, key, publicUrl });
-  } catch (err) {
-    console.error("Presign error:", err);
-    return NextResponse.json(
-      { error: "Failed to create presigned URL" },
-      { status: 500 }
-    );
-  }
+   } catch (error) {
+     console.error('Error generating presigned URL:', error);
+     return NextResponse.json(
+       { error: 'Failed to generate presigned URL' },
+       { status: 500 }
+     );
+   }
 }

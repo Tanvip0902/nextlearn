@@ -20,6 +20,11 @@ model User {
   sessions Session[]
   acconts Account[]
   courses       Course[]
+  
+  role       String?
+  banned     Boolean?
+  banReason  String?
+  banExpires DateTime?
 
   @@unique([email])
   @@map("user")
@@ -88,6 +93,8 @@ model Course {
 
  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String?
+
+  chapter Chapter[]
 }
 enum CourseStatus {
   Draft
@@ -101,3 +108,32 @@ enum CourseLevel {
   Advanced
 }
 
+model Chapter {
+  id String @id @default(uuid())
+
+  title    String
+  position Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId  String
+
+  lessons Lesson[]
+}
+
+model Lesson {
+  id String @id @default(uuid())
+
+  title        String
+  description  String?
+  thumbnailKey String?
+  videoKey     String?
+  position     Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Chapter   Chapter? @relation(fields: [chapterId], references: [id] , onDelete: Cascade)
+  chapterId String?
+
+}

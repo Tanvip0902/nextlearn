@@ -1,5 +1,4 @@
-import { description } from "@/components/sidebar/chart-area-interactive";
-import { title } from "process";
+
 import z from "zod";
 
 export const courseLevels = ["Beginner", "Intermediate", "Advanced"] as const;
@@ -24,10 +23,10 @@ export const courseSchema = z.object({
   filekey: z
     .string()
     .min(1,{message: "Filekey is required"}),
-  price: z
+ price: z.coerce
     .number()
-    .min(1, {message: "Price must be a positive number"}),
-  duration: z
+    .min(1, { message: "Price must be a positive number" }),
+  duration: z.coerce
     .number()
     .min(1, {message: "Duration must be at least 1 hours"})
     .max(500, {message: "Duration must be at most 500 hours"}),
@@ -54,20 +53,20 @@ export const chapterSchema = z.object({
 
 export type ChapterSchemaType = z.infer<typeof chapterSchema>;
 
-// export const lessonSchema = z.object({
-//   name: z.string().min(3, { message: "Name must be at least 3 characters long" }),
-//   courseId: z.string().uuid({ message: "Invalid course id" }),
-//   chapterId: z.string().uuid({ message: "Invalid chapter id" }),
-//   description: z
-//     .string()
-//     .min(3, { message: "Description must be at least 3 characters long" })
-//     .optional(),
-//   thumbnailKey: z
-//     .string()
-//     .optional(),
-//   videoKey: z
-//     .string()
-//     .optional(),
-// })
+export const lessonSchema = z.object({
+  name: z.string().min(3, { message: "Name must be at least 3 characters long" }),
+  courseId: z.string().uuid({ message: "Invalid course id" }),
+  chapterId: z.string().uuid({ message: "Invalid chapter id" }),
+  description: z
+    .string()
+    .min(3, { message: "Description must be at least 3 characters long" })
+    .optional(),
+  thumbnailKey: z
+    .string()
+    .optional(),
+  videoKey: z
+    .string()
+    .optional(),
+})
 
-// export type LessonSchemaType = z.infer<typeof lessonSchema>;
+ export type LessonSchemaType = z.infer<typeof lessonSchema>;

@@ -3,6 +3,7 @@
 import { requireAdmin } from "@/app/data/admin/require-admin";
 import arcjet, { fixedWindow } from "@/lib/arcjet";
 import { prisma } from "@/lib/db";
+import { stripe } from "@/lib/stripe";
 import { ApiResponse } from "@/lib/types";
 import { courseSchema, CourseSchemaType } from "@/lib/zodschemas";
 import { request } from "@arcjet/next";
@@ -17,12 +18,12 @@ const aj=arcjet
   })
 )
 
-export async function CreateCourse(data: CourseSchemaType): Promise<ApiResponse> {
+export async function CreateCourse(values: CourseSchemaType): Promise<ApiResponse> {
 
     const session = await requireAdmin();
   try {
-    const req = await request();                  // Reconstruye el objeto de la petición (ip del cliente, headers, cookies) 
-    const decision = await aj.protect(req, {      // Se pasa a arcjet la petición que recibe la action para que pase por la protección contra bots y ataques de fuerza bruta.
+    const req = await request();                  
+    const decision = await aj.protect(req, {      
       fingerprint: session?.user.id
     });
 
@@ -40,7 +41,7 @@ export async function CreateCourse(data: CourseSchemaType): Promise<ApiResponse>
       }
     }
 
-    const validation = courseSchema.safeParse(data);
+    const validation = courseSchema.safeParse(values);
 
     if (!validation.success) {
       return {
@@ -48,11 +49,20 @@ export async function CreateCourse(data: CourseSchemaType): Promise<ApiResponse>
         message: "Invalid form data",
       };
     }
+      const data = await stripe.products.create({ // Creación de producto de Stripe
+      name: validation.data.title,
+      description: validation.data.smallDescription,
+      default_price_data: {
+        currency: "usd",
+        unit_amount: validation.data.price * 100,
+      }
+    })
 
     await prisma.course.create({
       data: {
         ...validation.data,
-        userId: session?.user.id  as string, // TODO: replace with logged-in user ID
+        userId: session?.user.id  as string,
+        stripePriceId: data.default_price   as string  
       },
     });
 

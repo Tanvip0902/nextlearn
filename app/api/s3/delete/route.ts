@@ -1,18 +1,13 @@
 import { requireAdmin } from "@/app/data/admin/require-admin";
 import { S3 } from "@/lib/S3Client";
-import arcjet, { detectBot, fixedWindow } from "@/lib/arcjet";
+import arcjet, { fixedWindow } from "@/lib/arcjet";
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
-const aj=arcjet.withRule(
-  detectBot({
-    mode: "LIVE",
-    allow:[]
-  })
-)
+const aj=arcjet
 .withRule(
   fixedWindow({
     mode: "LIVE",
@@ -23,21 +18,21 @@ const aj=arcjet.withRule(
 
 export async function DELETE(request: Request) {
    
-   // const session = await requireAdmin();
+    const session = await requireAdmin();
     try {
-    //       const decision = await aj.protect(request,{
-    //   fingerprint: session?.user.id as string,
-    // });
+          const decision = await aj.protect(request,{
+      fingerprint: session?.user.id as string,
+    });
 
-    //  if(decision.isDenied()){
-    //   return NextResponse.json(
-    //     {
-    //       error: "You are not allowed to perform this action"
-    //     }, 
-    //     {
-    //       status: 429
-    //     })
-    // }
+     if(decision.isDenied()){
+      return NextResponse.json(
+        {
+          error: "You are not allowed to perform this action"
+        }, 
+        {
+          status: 429
+        })
+    }
         const body = await request.json();
 
         const key = body.key;

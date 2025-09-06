@@ -31,6 +31,7 @@ model User {
   @@unique([email])
   @@map("user")
   Enrollment Enrollment[]
+  LessonProgress LessonProgress[]
 }
 
 model Session {
@@ -87,7 +88,7 @@ model Course {
   duration         Int
   level            CourseLevel  @default(Beginner)
 
-  stripePriceId    String?      @unique  
+  stripePriceId    String?    @unique  
 
   category         String
   smallDescription String
@@ -143,7 +144,10 @@ model Lesson {
   Chapter   Chapter? @relation(fields: [chapterId], references: [id] , onDelete: Cascade)
   chapterId String?
 
+
+  LessonProgress LessonProgress[]
 }
+
 model Enrollment {
   id String @id @default(uuid())
 
@@ -165,4 +169,22 @@ enum EnrollmentStatus {
   Pending
   Active
   Cancel
+}
+
+model LessonProgress {
+  id        String   @id @default(uuid())
+
+  completed Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+
+  Lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonId  String
+
+  @@unique([userId, lessonId])
+
 }

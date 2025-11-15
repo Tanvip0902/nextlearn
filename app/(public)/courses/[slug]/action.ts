@@ -152,7 +152,7 @@ export const enrollInCourseAction = async (courseId:string):Promise<ApiResponse 
         customer: stripeCustomerId,
         line_items: [
           {
-           price: "price_1S2Web2Lco8AVGVDhfQVEpKc",
+           price: course.stripePriceId as string,
             quantity: 1,
           },
         ],

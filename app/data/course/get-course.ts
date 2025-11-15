@@ -7,25 +7,10 @@ export const getIndividualCourse = async (slug: string) => {
     where: {
       slug: slug
     },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      filekey: true,
-      price: true,
-      duration: true,
-      level: true,
-      category: true,
-      smallDescription: true,
+    include: {
       chapter: {
-        select: {
-          id: true,
-          title: true,
-          lessons:{
-            select: {
-              id: true,
-              title: true,
-            },
+        include: {
+          lessons: {
             orderBy: {
               position: "asc"
             },
@@ -34,7 +19,20 @@ export const getIndividualCourse = async (slug: string) => {
         orderBy:{
           position: "asc"
         },
-      }
+      },
+      comments: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
     }
   })
 

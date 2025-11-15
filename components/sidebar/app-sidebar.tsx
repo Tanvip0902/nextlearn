@@ -1,5 +1,4 @@
 "use client"
-
 import * as React from "react"
 import {
   IconCamera,
@@ -14,8 +13,6 @@ import {
   IconSettings,
   IconUsers,
 } from "@tabler/icons-react"
-
-
 
 import {
   Sidebar,
@@ -45,88 +42,74 @@ const data = {
       url: "/admin/courses",
       icon: IconListDetails,
     },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
+  
   ],
   navClouds: [
     {
       title: "Capture",
       icon: IconCamera,
       isActive: true,
-      url: "#",
+      url: "/admin/capture", // Updated with proper path
       items: [
         {
           title: "Active Proposals",
-          url: "#",
+          url: "/admin/capture/active",
         },
         {
           title: "Archived",
-          url: "#",
+          url: "/admin/capture/archived",
         },
       ],
     },
     {
       title: "Proposal",
       icon: IconFileDescription,
-      url: "#",
+      url: "/admin/proposals", // Updated with proper path
       items: [
         {
           title: "Active Proposals",
-          url: "#",
+          url: "/admin/proposals/active",
         },
         {
           title: "Archived",
-          url: "#",
+          url: "/admin/proposals/archived",
         },
       ],
     },
     {
       title: "Prompts",
       icon: IconFileAi,
-      url: "#",
+      url: "/admin/prompts", // Updated with proper path
       items: [
         {
           title: "Active Proposals",
-          url: "#",
+          url: "/admin/prompts/active",
         },
         {
           title: "Archived",
-          url: "#",
+          url: "/admin/prompts/archived",
         },
       ],
     },
   ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  
+navSecondary: [
+  {
+    title: "Settings",
+    url: "/dashboard/settings",
+    icon: IconSettings,
+  },
+  {
+    title: "Get Help",
+    url: "/help", // 🔥 updated path
+    icon: IconHelp,
+  },
+  {
+    title: "Search",
+    url: "/dashboard/search",
+    icon: IconSearch,
+  },
+],
+
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -151,7 +134,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-
+      
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />

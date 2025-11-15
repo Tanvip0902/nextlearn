@@ -32,6 +32,7 @@ model User {
   @@map("user")
   Enrollment Enrollment[]
   LessonProgress LessonProgress[]
+  Comment Comment[]
 }
 
 model Session {
@@ -103,6 +104,8 @@ model Course {
   chapter Chapter[]
 
   Enrollment Enrollment[]
+
+  comments Comment[]
 }
 enum CourseStatus {
   Draft
@@ -187,4 +190,17 @@ model LessonProgress {
 
   @@unique([userId, lessonId])
 
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  courseId  String
+
+  user      User     @relation(fields: [userId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id])
 }
